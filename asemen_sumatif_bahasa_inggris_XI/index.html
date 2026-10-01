@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asesmen Sumatif Bahasa Inggris - MA Mu'allimin NU</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Custom scrollbar for better look in textareas */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- App Container -->
+    <div id="app" class="flex-grow flex flex-col w-full h-full"></div>
+
+    <script>
+        // Contextual Narrative Texts for Reading Comprehension
+        const narrativeText = `
+        <div class="mb-6">
+            <h3 class="text-xl font-bold mb-2 text-teal-700">Text 1: The Viral Hoax</h3>
+            <p class="mb-3 text-justify text-slate-700 leading-relaxed">Maya, a Class 11 student, was scrolling through her social media feed when she saw a shocking post. It claimed that the beloved local green space, "Hutan Kota", was going to be chopped down next week to build a massive shopping mall. The post included a dramatic picture of bulldozers destroying large green trees. Outraged, many of her friends started sharing the post, using angry hashtags demanding justice.</p>
+            <p class="mb-3 text-justify text-slate-700 leading-relaxed">Maya felt the urge to share it too, but she remembered her recent Digital Literacy seminar at school. She paused and examined the post carefully. First, she checked the source. It was from an unverified, anonymous account created just two days ago. Next, she downloaded the image and performed a reverse image search. The results showed that the photo was actually taken five years ago in a different country during a legal logging operation. Maya realized it was a hoax designed to cause panic and engagement.</p>
+            <p class="mb-3 text-justify text-slate-700 leading-relaxed">Instead of sharing the fake news, she created a well-researched thread explaining how she debunked the post. She attached the original source of the photo and taught her followers about the importance of verifying digital information before reacting. Her post went viral for the right reasons, calming the community down.</p>
+        </div>
+        <div class="mb-2">
+            <h3 class="text-xl font-bold mb-2 text-emerald-700">Text 2: Project Green Canopy</h3>
+            <p class="mb-3 text-justify text-slate-700 leading-relaxed">Inspired by the power of truthful information and digital connection, Maya and her classmates decided to use social media for a genuine positive cause. They noticed that the real threat to "Hutan Kota" wasn't a fictional mall, but actual plastic waste constantly dumped by irresponsible visitors. They initiated "Project Green Canopy," an online campaign aimed at offline environmental action.</p>
+            <p class="mb-3 text-justify text-slate-700 leading-relaxed">They designed appealing infographics about the dangers of microplastics to local wildlife and shared them across their networks. They also organized a weekend cleanup event. By utilizing digital tools—creating digital event pages, using targeted positive hashtags, and sharing progress videos—they managed to gather over two hundred volunteers, including local government officials.</p>
+            <p class="mb-3 text-justify text-slate-700 leading-relaxed">During the cleanup weekend, they segregated the waste, sending recyclables to a local facility and properly disposing of the rest. Furthermore, they planted fifty new native saplings to restore damaged areas. The project proved that when digital literacy is combined with a genuine love for the environment, the impact can be transformative, turning virtual awareness into tangible ecological healing.</p>
+        </div>
+        `;
+
+        // Global Application State
+        let state = {
+            currentView: 'login', // login, studentIntro, quiz, result, adminDashboard
+            currentUser: null, 
+            studentAttempts: {}, 
+            settings: {
+                adminUsername: 'admin',
+                adminPassword: 'password123', // Admin can change this later
+                logoText: "MA Mu'allimin NU",
+                author: "Annas Th.",
+                kkm: 78,
+                timeLimitMinutes: 90
+            },
+            quizSession: {
+                answers: {}, 
+                timeRemaining: 90 * 60,
+                timerInterval: null,
+                currentSection: 'mcq' 
+            },
+            questions: {
+                mcq: [
+                    { id: 'm1', q: "What was the viral post on social media about in Text 1?", options: ["A. A new digital literacy seminar.", "B. Hutan Kota being chopped down for a mall.", "C. A successful tree-planting event.", "D. A new shopping mall opening discount."], a: 1 },
+                    { id: 'm2', q: "How did Maya's friends initially react to the post?", options: ["A. They verified the information.", "B. They ignored it completely.", "C. They shared it with angry hashtags.", "D. They reported the account."], a: 2 },
+                    { id: 'm3', q: "What stopped Maya from immediately sharing the post?", options: ["A. Her internet connection dropped.", "B. She remembered her Digital Literacy seminar.", "C. Her friends told her not to.", "D. She didn't care about the forest."], a: 1 },
+                    { id: 'm4', q: "What was suspicious about the account that posted the news?", options: ["A. It was a government account.", "B. It had too many followers.", "C. It was an unverified account created two days ago.", "D. It belonged to Maya's friend."], a: 2 },
+                    { id: 'm5', q: "What tool did Maya use to check the authenticity of the picture?", options: ["A. A dictionary", "B. A reverse image search", "C. A calculator", "D. A social media poll"], a: 1 },
+                    { id: 'm6', q: "Where was the photo in the viral post actually from?", options: ["A. Hutan Kota, taken yesterday.", "B. A different country, taken five years ago.", "C. A movie set.", "D. A nearby city, taken last month."], a: 1 },
+                    { id: 'm7', q: "What action did Maya take after discovering the truth?", options: ["A. She deleted her social media account.", "B. She created a thread explaining the hoax.", "C. She argued with the anonymous account.", "D. She joined the angry protest."], a: 1 },
+                    { id: 'm8', q: "What was the real threat to Hutan Kota mentioned in Text 2?", options: ["A. The construction of a mall.", "B. Plastic waste dumped by visitors.", "C. A massive forest fire.", "D. Too many trees growing."], a: 1 },
+                    { id: 'm9', q: "What was the name of the campaign initiated by Maya and her friends?", options: ["A. Save the Mall", "B. Digital Literacy Now", "C. Project Green Canopy", "D. Hutan Kota Defense"], a: 2 },
+                    { id: 'm10', q: "What kind of digital content did they create for their campaign?", options: ["A. Fake news articles.", "B. Infographics about microplastics.", "C. Angry rant videos.", "D. Video games."], a: 1 },
+                    { id: 'm11', q: "How did they gather volunteers for the cleanup event?", options: ["A. By going door-to-door.", "B. By paying people.", "C. By using digital event pages and targeted hashtags.", "D. By forcing their classmates."], a: 2 },
+                    { id: 'm12', q: "How many volunteers participated in the cleanup event?", options: ["A. Exactly fifty.", "B. Less than twenty.", "C. Over two hundred.", "D. Only Maya and her friends."], a: 2 },
+                    { id: 'm13', q: "What did the volunteers do with the collected waste?", options: ["A. They burned it all in the forest.", "B. They threw it in the river.", "C. They segregated it and sent recyclables to a facility.", "D. They left it in bags on the street."], a: 2 },
+                    { id: 'm14', q: "How many new saplings were planted during the event?", options: ["A. Ten", "B. Fifty", "C. One hundred", "D. Five hundred"], a: 1 },
+                    { id: 'm15', q: "The word 'debunked' in Text 1 is closest in meaning to...", options: ["A. Supported", "B. Created", "C. Exposed the falseness of", "D. Shared widely"], a: 2 },
+                    { id: 'm16', q: "Based on Text 2, what is the ultimate goal of combining digital literacy and environmental love?", options: ["A. To get more followers online.", "B. To turn virtual awareness into tangible ecological healing.", "C. To stop people from using social media.", "D. To build more shopping malls."], a: 1 },
+                    { id: 'm17', q: "Which of the following is an example of good digital literacy shown by Maya?", options: ["A. Sharing a post because it makes her angry.", "B. Trusting anonymous accounts.", "C. Verifying sources before reacting.", "D. Spreading unverified news quickly."], a: 2 },
+                    { id: 'm18', q: "Why did Maya's thread in Text 1 go viral?", options: ["A. Because it was fake news.", "B. Because it taught people how to verify information.", "C. Because it was a funny meme.", "D. Because she paid for advertising."], a: 1 },
+                    { id: 'm19', q: "What does 'offline environmental action' refer to in the text?", options: ["A. Posting on social media.", "B. Creating infographics.", "C. The physical weekend cleanup event.", "D. Watching videos about nature."], a: 2 },
+                    { id: 'm20', q: "What can be concluded about Maya's character?", options: ["A. She is gullible and easily tricked.", "B. She is critical, proactive, and cares for her environment.", "C. She hates using digital technology.", "D. She doesn't care about her local community."], a: 1 }
+                ],
+                tf: [
+                    { id: 't1', q: "Maya immediately shared the post about the shopping mall because she was angry.", a: false },
+                    { id: 't2', q: "The photo of the bulldozers was actually from a different country taken five years ago.", a: true },
+                    { id: 't3', q: "Digital literacy involves evaluating the source of information online.", a: true },
+                    { id: 't4', q: "The anonymous account that posted the hoax was highly verified and trustworthy.", a: false },
+                    { id: 't5', q: "Maya's educational thread caused more panic in the community.", a: false },
+                    { id: 't6', q: "Project Green Canopy was initiated to protest against the shopping mall construction.", a: false },
+                    { id: 't7', q: "Infographics about microplastics were used to educate the public online.", a: true },
+                    { id: 't8', q: "The campaign successfully used digital tools to organize a physical cleanup event.", a: true },
+                    { id: 't9', q: "During the cleanup, all the waste collected was sent directly to the landfill without sorting.", a: false },
+                    { id: 't10', q: "The story shows that social media can be used as a positive tool for environmental conservation.", a: true }
+                ],
+                matching: {
+                    premises: [
+                        { id: 'p1', text: "Hutan Kota" },
+                        { id: 'p2', text: "Reverse image search" },
+                        { id: 'p3', text: "Hoax" },
+                        { id: 'p4', text: "Digital Literacy" },
+                        { id: 'p5', text: "Project Green Canopy" },
+                        { id: 'p6', text: "Microplastics" },
+                        { id: 'p7', text: "Targeted hashtags" },
+                        { id: 'p8', text: "Recyclables" },
+                        { id: 'p9', text: "Saplings" },
+                        { id: 'p10', text: "Maya" }
+                    ],
+                    responses: [
+                        { id: 'r1', text: "A tool used to find the origin of a picture." },
+                        { id: 'r2', text: "The local green space threatened by plastic waste." },
+                        { id: 'r3', text: "Skills to critically evaluate online information." },
+                        { id: 'r4', text: "A deliberately fabricated falsehood made to deceive." },
+                        { id: 'r5', text: "An online campaign for offline environmental action." },
+                        { id: 'r6', text: "A digital tool used to gather specific volunteers online." },
+                        { id: 'r7', text: "Harmful particles that endanger local wildlife." },
+                        { id: 'r8', text: "Young trees planted to restore damaged areas." },
+                        { id: 'r9', text: "Waste materials that were segregated and sent to a facility." },
+                        { id: 'r10', text: "A proactive student who debunked fake news." }
+                    ],
+                    answers: { 'p1':'r2', 'p2':'r1', 'p3':'r4', 'p4':'r3', 'p5':'r5', 'p6':'r7', 'p7':'r6', 'p8':'r9', 'p9':'r8', 'p10':'r10' }
+                }
+            }
+        };
+
+        function getEl(id) { return document.getElementById(id); }
+
+        function navigateTo(view) {
+            state.currentView = view;
+            render();
+        }
+
+        function handleLogin(e, role) {
+            e.preventDefault();
+            if (role === 'admin') {
+                const user = getEl('adminUser').value;
+                const pass = getEl('adminPass').value;
+                if (user === state.settings.adminUsername && pass === state.settings.adminPassword) {
+                    state.currentUser = { role: 'admin', name: 'Administrator' };
+                    navigateTo('adminDashboard');
+                } else {
+                    alert('Username atau password admin salah!');
+                }
+            } else {
+                const name = getEl('studentName').value.trim();
+                const studentClass = getEl('studentClass').value;
+                const presensi = getEl('studentPresensi').value.trim();
+                
+                if (!name || !studentClass || !presensi) {
+                    alert('Harap isi semua data siswa!');
+                    return;
+                }
+
+                // Check attempts limitation (Max 2)
+                const attempts = state.studentAttempts[presensi] || 0;
+                if (attempts >= 2) {
+                    alert('Maaf, Anda telah mencapai batas maksimal pengerjaan (2 kali).');
+                    return;
+                }
+
+                state.currentUser = { role: 'student', name, class: studentClass, presensi };
+                navigateTo('studentIntro');
+            }
+        }
+
+        function logout() {
+            if(state.quizSession.timerInterval) clearInterval(state.quizSession.timerInterval);
+            state.currentUser = null;
+            state.quizSession.answers = {};
+            navigateTo('login');
+        }
+
+        function startQuiz() {
+            // Increment attempt counter for student
+            if(state.currentUser.role === 'student') {
+                state.studentAttempts[state.currentUser.presensi] = (state.studentAttempts[state.currentUser.presensi] || 0) + 1;
+            }
+            
+            state.quizSession.answers = {};
+            state.quizSession.timeRemaining = state.settings.timeLimitMinutes * 60;
+            state.quizSession.currentSection = 'mcq';
+            navigateTo('quiz');
+            startTimer();
+        }
+
+        function startTimer() {
+            if(state.quizSession.timerInterval) clearInterval(state.quizSession.timerInterval);
+            state.quizSession.timerInterval = setInterval(() => {
+                state.quizSession.timeRemaining--;
+                updateTimerUI();
+                if (state.quizSession.timeRemaining <= 0) {
+                    clearInterval(state.quizSession.timerInterval);
+                    submitQuiz(true);
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const timerEl = getEl('quizTimer');
+            if (timerEl) {
+                const minutes = Math.floor(state.quizSession.timeRemaining / 60);
+                const seconds = state.quizSession.timeRemaining % 60;
+                timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                if (state.quizSession.timeRemaining < 300) { 
+                    timerEl.classList.add('text-rose-600', 'animate-pulse');
+                }
+            }
+        }
+
+        function handleAnswer(questionId, value) {
+            state.quizSession.answers[questionId] = value;
+        }
+
+        function switchSection(section) {
+            state.quizSession.currentSection = section;
+            renderQuizContent();
+            updateTabUI();
+        }
+
+        function submitQuiz(isAuto = false) {
+            if (!isAuto && !confirm('Apakah Anda yakin ingin mengumpulkan jawaban? Anda tidak bisa kembali setelah ini.')) return;
+            
+            clearInterval(state.quizSession.timerInterval);
+            navigateTo('result');
+        }
+
+        function calculateScore() {
+            let correct = 0;
+            const ans = state.quizSession.answers;
+            
+            state.questions.mcq.forEach(q => { if (ans[q.id] === q.a.toString()) correct++; });
+            state.questions.tf.forEach(q => { if (ans[q.id] === q.a.toString()) correct++; });
+            state.questions.matching.premises.forEach(p => { if (ans[p.id] === state.questions.matching.answers[p.id]) correct++; });
+
+            // 40 questions, max score 100
+            return Math.round((correct / 40) * 100);
+        }
+
+        function downloadResult() {
+            const score = calculateScore();
+            const status = score >= state.settings.kkm ? 'TUNTAS' : 'BELUM TUNTAS';
+            const text = `
+=============================================
+HASIL ASESMEN SUMATIF BAHASA INGGRIS
+Tema: Digital Literacies & Environment
+${state.settings.logoText}
+=============================================
+Nama Lengkap : ${state.currentUser.name}
+Kelas        : ${state.currentUser.class}
+No. Presensi : ${state.currentUser.presensi}
+---------------------------------------------
+NILAI AKHIR  : ${score}
+STATUS       : ${status}
+KKM          : ${state.settings.kkm}
+---------------------------------------------
+Disusun oleh : ${state.settings.author}
+=============================================
+            `;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Hasil_Inggris_${state.currentUser.name.replace(/\s+/g, '_')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function renderHeader(showLogout = true) {
+            return `
+                <header class="bg-teal-700 text-white p-4 shadow-md flex justify-between items-center z-10">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-leaf text-2xl text-teal-300"></i>
+                        <div>
+                            <h1 class="font-bold text-lg leading-tight">${state.settings.logoText}</h1>
+                            <p class="text-teal-200 text-xs">Asesmen Sumatif Bahasa Inggris | By ${state.settings.author}</p>
+                        </div>
+                    </div>
+                    ${showLogout ? `
+                        <div class="flex items-center gap-4">
+                            <span class="hidden md:inline text-sm font-medium">
+                                <i class="fa-regular fa-user mr-1"></i> ${state.currentUser?.name}
+                            </span>
+                            <button onclick="logout()" class="bg-teal-800 hover:bg-teal-900 px-3 py-1.5 rounded-md text-sm transition-colors border border-teal-600">
+                                <i class="fa-solid fa-right-from-bracket"></i> Keluar
+                            </button>
+                        </div>
+                    ` : ''}
+                </header>
+            `;
+        }
+
+        function renderLogin() {
+            return `
+                ${renderHeader(false)}
+                <div class="flex-grow flex items-center justify-center p-4 fade-in bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
+                        <div class="bg-teal-50 text-center py-6 border-b border-teal-100">
+                            <h2 class="text-2xl font-bold text-teal-800">Portal Asesmen</h2>
+                            <p class="text-sm text-teal-600 mt-1">Digital Literacies & Environment</p>
+                        </div>
+                        <div class="flex border-b">
+                            <button onclick="switchTab('student')" id="btnTabStudent" class="flex-1 py-3 text-center font-semibold border-b-2 border-teal-600 text-teal-700 transition-colors bg-white">Siswa</button>
+                            <button onclick="switchTab('admin')" id="btnTabAdmin" class="flex-1 py-3 text-center font-semibold border-b-2 border-transparent text-slate-500 transition-colors bg-slate-50 hover:bg-slate-100">Guru / Admin</button>
+                        </div>
+                        
+                        <div class="p-6">
+                            <!-- Student Form -->
+                            <form id="studentForm" onsubmit="handleLogin(event, 'student')" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap (Username)</label>
+                                    <input type="text" id="studentName" required placeholder="Contoh: Budi Santoso" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Kelas</label>
+                                    <select id="studentClass" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+                                        <option value="11 MIA 1">11 MIA 1</option>
+                                        <option value="11 MIA 2">11 MIA 2</option>
+                                        <option value="11 IIS 1">11 IIS 1</option>
+                                        <option value="11 IIS 2">11 IIS 2</option>
+                                        <option value="11 Agama">11 Agama</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">No. Presensi (Password)</label>
+                                    <input type="number" id="studentPresensi" required placeholder="Contoh: 12" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all">
+                                    <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-500"></i> Password menggunakan nomor presensi.</p>
+                                </div>
+                                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg transition-colors mt-4 shadow-md hover:shadow-lg">Masuk Ujian</button>
+                            </form>
+
+                            <!-- Admin Form -->
+                            <form id="adminForm" onsubmit="handleLogin(event, 'admin')" class="space-y-4 hidden">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Username Admin</label>
+                                    <input type="text" id="adminUser" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-700 focus:border-slate-700 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                    <input type="password" id="adminPass" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-700 focus:border-slate-700 outline-none transition-all">
+                                </div>
+                                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-lg transition-colors mt-4 shadow-md">Masuk Panel Admin</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Global helper for login tab switching
+        window.switchTab = function(type) {
+            const sf = getEl('studentForm'), af = getEl('adminForm');
+            const bs = getEl('btnTabStudent'), ba = getEl('btnTabAdmin');
+            if(type === 'student') {
+                sf.classList.remove('hidden'); af.classList.add('hidden');
+                bs.className = "flex-1 py-3 text-center font-semibold border-b-2 border-teal-600 text-teal-700 transition-colors bg-white";
+                ba.className = "flex-1 py-3 text-center font-semibold border-b-2 border-transparent text-slate-500 transition-colors bg-slate-50 hover:bg-slate-100";
+            } else {
+                af.classList.remove('hidden'); sf.classList.add('hidden');
+                ba.className = "flex-1 py-3 text-center font-semibold border-b-2 border-slate-700 text-slate-800 transition-colors bg-white";
+                bs.className = "flex-1 py-3 text-center font-semibold border-b-2 border-transparent text-slate-500 transition-colors bg-slate-50 hover:bg-slate-100";
+            }
+        };
+
+        function renderStudentIntro() {
+            const attemptCount = state.studentAttempts[state.currentUser.presensi] || 0;
+            return `
+                ${renderHeader()}
+                <div class="flex-grow max-w-4xl w-full mx-auto p-4 md:p-6 fade-in">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10 border border-slate-100">
+                        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+                            <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 text-2xl">
+                                <i class="fa-solid fa-user-graduate"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">Selamat Datang, ${state.currentUser.name}</h2>
+                                <p class="text-slate-500">Kelas ${state.currentUser.class} | No. ${state.currentUser.presensi}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-5 mb-8 rounded-r-xl">
+                            <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2"><i class="fa-solid fa-circle-info"></i> Informasi Asesmen</h3>
+                            <ul class="list-disc list-inside text-blue-800 space-y-2 text-sm md:text-base">
+                                <li><strong>Materi:</strong> Narrative Text (Digital Literacies & Environment)</li>
+                                <li><strong>Jumlah Soal:</strong> 40 Butir (20 Pilihan Ganda, 10 Benar/Salah, 10 Menjodohkan)</li>
+                                <li><strong>Waktu:</strong> ${state.settings.timeLimitMinutes} Menit</li>
+                                <li><strong>Kesempatan:</strong> Maksimal 2 kali pengerjaan (Ini percobaan ke-${attemptCount + 1})</li>
+                                <li><strong>KKM:</strong> ${state.settings.kkm}</li>
+                            </ul>
+                        </div>
+                        
+                        <p class="text-slate-600 mb-8 leading-relaxed">Bacalah teks dengan saksama sebelum menjawab pertanyaan. Soal terdiri dari 3 bagian yang dapat diakses melalui tab. Waktu akan berjalan secara otomatis setelah Anda menekan tombol mulai.</p>
+                        
+                        <div class="flex justify-end">
+                            <button onclick="startQuiz()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-teal-500/30 transition-all transform hover:-translate-y-1 flex items-center gap-2">
+                                <span>Mulai Mengerjakan</span> <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderQuiz() {
+            return `
+                ${renderHeader(false)}
+                
+                <!-- Sticky Timer Bar -->
+                <div class="bg-slate-800 text-white p-3 sticky top-0 z-20 shadow-md flex justify-between items-center px-4 md:px-8 border-b-4 border-teal-500">
+                    <div class="font-semibold text-sm md:text-base truncate max-w-[50%] flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-teal-400"></i>
+                        <span>${state.currentUser.name} (${state.currentUser.class})</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-slate-700 px-4 py-1.5 rounded-full border border-slate-600 shadow-inner">
+                        <i class="fa-regular fa-clock text-teal-400"></i>
+                        <span id="quizTimer" class="font-mono font-bold text-lg tracking-wider">--:--</span>
+                    </div>
+                </div>
+
+                <div class="flex-grow flex flex-col md:flex-row max-w-[1400px] w-full mx-auto p-4 gap-6 fade-in h-full">
+                    
+                    <!-- Left Panel: Narrative Text -->
+                    <div class="w-full md:w-5/12 bg-white rounded-2xl shadow-lg flex flex-col overflow-hidden h-[40vh] md:h-[calc(100vh-140px)] sticky top-20 border border-slate-100">
+                        <div class="bg-teal-50 p-4 border-b border-teal-100 font-bold text-teal-800 flex items-center gap-2">
+                            <i class="fa-solid fa-book-open-reader"></i> Reading Text
+                        </div>
+                        <div class="p-6 overflow-y-auto flex-grow prose prose-teal max-w-none text-sm md:text-base">
+                            ${narrativeText}
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Questions -->
+                    <div class="w-full md:w-7/12 bg-white rounded-2xl shadow-lg flex flex-col overflow-hidden relative pb-16 md:pb-0 h-auto md:h-[calc(100vh-140px)] border border-slate-100">
+                        
+                        <!-- Section Tabs -->
+                        <div class="flex border-b bg-slate-50 overflow-x-auto custom-scrollbar">
+                            <button id="tab-mcq" onclick="switchSection('mcq')" class="quiz-tab flex-1 py-4 px-4 font-semibold text-sm whitespace-nowrap transition-colors border-b-[3px] border-teal-600 text-teal-700">Pilihan Ganda (1-20)</button>
+                            <button id="tab-tf" onclick="switchSection('tf')" class="quiz-tab flex-1 py-4 px-4 font-semibold text-sm whitespace-nowrap transition-colors border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100">Benar / Salah (21-30)</button>
+                            <button id="tab-matching" onclick="switchSection('matching')" class="quiz-tab flex-1 py-4 px-4 font-semibold text-sm whitespace-nowrap transition-colors border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100">Menjodohkan (31-40)</button>
+                        </div>
+
+                        <!-- Questions Container -->
+                        <div id="questionsContainer" class="p-6 overflow-y-auto flex-grow bg-slate-50/50">
+                            <!-- Injected by renderQuizContent() -->
+                        </div>
+                        
+                        <!-- Submit Action -->
+                        <div class="p-4 bg-white border-t border-slate-100 flex justify-end fixed md:relative bottom-0 left-0 w-full md:w-auto shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.1)] md:shadow-none z-10">
+                             <button onclick="submitQuiz()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl transition-colors flex items-center gap-2 w-full md:w-auto justify-center shadow-lg hover:shadow-teal-500/30">
+                                <i class="fa-solid fa-paper-plane"></i> Kumpulkan Jawaban
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateTabUI() {
+            document.querySelectorAll('.quiz-tab').forEach(el => {
+                el.classList.remove('border-teal-600', 'text-teal-700');
+                el.classList.add('border-transparent', 'text-slate-500');
+            });
+            const activeTab = document.getElementById(`tab-${state.quizSession.currentSection}`);
+            if(activeTab) {
+                activeTab.classList.remove('border-transparent', 'text-slate-500');
+                activeTab.classList.add('border-teal-600', 'text-teal-700');
+            }
+        }
+
+        function renderQuizContent() {
+            const container = getEl('questionsContainer');
+            if (!container) return;
+            
+            const s = state.quizSession.currentSection;
+            let html = '';
+
+            if (s === 'mcq') {
+                html = state.questions.mcq.map((q, index) => `
+                    <div class="mb-8 bg-white p-5 rounded-xl shadow-sm border border-slate-200 hover:border-teal-200 transition-colors">
+                        <p class="font-semibold text-slate-800 mb-4 text-base md:text-lg leading-snug"><span class="text-teal-600 mr-2 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">${index + 1}</span> ${q.q}</p>
+                        <div class="space-y-3 pl-2 md:pl-10">
+                            ${q.options.map((opt, optIdx) => `
+                                <label class="flex items-start p-3 rounded-lg hover:bg-teal-50 cursor-pointer transition-colors border border-transparent hover:border-teal-100 ${state.quizSession.answers[q.id] === optIdx.toString() ? 'bg-teal-50 border-teal-200' : 'bg-slate-50'}">
+                                    <input type="radio" name="${q.id}" value="${optIdx}" 
+                                        ${state.quizSession.answers[q.id] === optIdx.toString() ? 'checked' : ''}
+                                        onchange="handleAnswer('${q.id}', this.value); renderQuizContent();"
+                                        class="mt-1 w-4 h-4 text-teal-600 focus:ring-teal-500 border-slate-300">
+                                    <span class="ml-3 text-slate-700 text-sm md:text-base font-medium">${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } else if (s === 'tf') {
+                html = state.questions.tf.map((q, index) => `
+                    <div class="mb-6 bg-white p-5 rounded-xl shadow-sm border border-slate-200 hover:border-teal-200 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <p class="font-medium text-slate-800 flex-grow leading-snug"><span class="text-teal-600 font-semibold mr-2 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">${index + 21}</span> ${q.q}</p>
+                        <div class="flex gap-0 sm:flex-shrink-0 shadow-sm rounded-lg overflow-hidden border border-slate-300">
+                            <label class="flex-1 text-center cursor-pointer">
+                                <input type="radio" name="${q.id}" value="true" 
+                                    ${state.quizSession.answers[q.id] === 'true' ? 'checked' : ''}
+                                    onchange="handleAnswer('${q.id}', this.value); renderQuizContent();"
+                                    class="hidden peer">
+                                <div class="px-6 py-2.5 bg-slate-50 peer-checked:bg-teal-600 peer-checked:text-white transition-colors text-sm font-bold border-r border-slate-300 peer-checked:border-teal-600">TRUE</div>
+                            </label>
+                            <label class="flex-1 text-center cursor-pointer">
+                                <input type="radio" name="${q.id}" value="false" 
+                                    ${state.quizSession.answers[q.id] === 'false' ? 'checked' : ''}
+                                    onchange="handleAnswer('${q.id}', this.value); renderQuizContent();"
+                                    class="hidden peer">
+                                <div class="px-6 py-2.5 bg-slate-50 peer-checked:bg-rose-600 peer-checked:text-white transition-colors text-sm font-bold peer-checked:border-rose-600">FALSE</div>
+                            </label>
+                        </div>
+                    </div>
+                `).join('');
+            } else if (s === 'matching') {
+                html = `<div class="mb-6 bg-blue-50 p-4 rounded-xl border border-blue-200 flex gap-3 items-start">
+                            <i class="fa-solid fa-circle-info text-blue-500 mt-1"></i>
+                            <p class="text-sm text-blue-800 font-medium">Pilih pasangan (Response) yang tepat untuk setiap Premis di sebelah kiri berdasarkan pemahaman teks.</p>
+                        </div>`;
+                
+                html += state.questions.matching.premises.map((p, index) => {
+                    const currentAnswer = state.quizSession.answers[p.id] || '';
+                    const optionsWithSelected = `<option value="">-- Pilih Jawaban / Pasangan --</option>` + state.questions.matching.responses.map(r => 
+                        `<option value="${r.id}" ${currentAnswer === r.id ? 'selected' : ''}>${r.text}</option>`
+                    ).join('');
+
+                    return `
+                    <div class="mb-4 bg-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-teal-200 transition-colors">
+                        <div class="font-medium text-slate-800 md:w-1/2 flex items-center gap-3">
+                            <span class="text-teal-600 font-bold bg-teal-50 px-2 py-1 rounded-md border border-teal-100 flex-shrink-0">${index + 31}</span> 
+                            <span class="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 w-full">${p.text}</span>
+                        </div>
+                        <div class="md:w-1/2 relative">
+                            <select onchange="handleAnswer('${p.id}', this.value); renderQuizContent();" class="w-full pl-3 pr-10 py-2.5 border ${currentAnswer ? 'border-teal-500 bg-teal-50/30' : 'border-slate-300 bg-slate-50'} rounded-xl focus:ring-2 focus:ring-teal-500 outline-none text-sm font-medium transition-colors appearance-none cursor-pointer">
+                                ${optionsWithSelected}
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+                `}).join('');
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderResult() {
+            const score = calculateScore();
+            const isPass = score >= state.settings.kkm;
+            
+            return `
+                ${renderHeader(true)}
+                <div class="flex-grow flex items-center justify-center p-4 fade-in bg-slate-100">
+                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden text-center border border-slate-200">
+                        <div class="bg-gradient-to-br ${isPass ? 'from-teal-500 to-emerald-600' : 'from-rose-500 to-red-600'} p-10 text-white relative overflow-hidden">
+                            <!-- Background decoration -->
+                            <i class="fa-solid ${isPass ? 'fa-medal' : 'fa-triangle-exclamation'} absolute -right-10 -bottom-10 text-9xl opacity-20"></i>
+                            
+                            <div class="relative z-10">
+                                <i class="fa-solid ${isPass ? 'fa-award text-6xl text-yellow-300' : 'fa-circle-xmark text-6xl text-white/90'} mb-4 drop-shadow-md"></i>
+                                <h2 class="text-3xl font-black tracking-wide">Asesmen Selesai</h2>
+                                <p class="opacity-95 mt-2 font-medium text-lg">${isPass ? 'Selamat, Anda telah mencapai KKM!' : 'Tetap semangat, belajar lebih giat lagi.'}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="p-8">
+                            <div class="flex justify-center items-end gap-2 mb-8">
+                                <span class="text-7xl font-black text-slate-800 leading-none tracking-tighter">${score}</span>
+                                <span class="text-slate-400 font-bold text-xl pb-1">/ 100</span>
+                            </div>
+                            
+                            <div class="bg-slate-50 rounded-xl p-5 text-left border border-slate-200 mb-8 space-y-3">
+                                <div class="flex justify-between border-b border-slate-200 pb-2"><span class="text-slate-500 font-medium">Nama Lengkap</span> <span class="font-bold text-slate-800">${state.currentUser.name}</span></div>
+                                <div class="flex justify-between border-b border-slate-200 pb-2"><span class="text-slate-500 font-medium">Kelas</span> <span class="font-bold text-slate-800">${state.currentUser.class}</span></div>
+                                <div class="flex justify-between border-b border-slate-200 pb-2"><span class="text-slate-500 font-medium">No. Presensi</span> <span class="font-bold text-slate-800">${state.currentUser.presensi}</span></div>
+                                <div class="flex justify-between pt-1"><span class="text-slate-500 font-medium">Status</span> <span class="font-black px-3 py-1 rounded-md text-xs ${isPass ? 'bg-teal-100 text-teal-800' : 'bg-rose-100 text-rose-800'}">${isPass ? 'TUNTAS' : 'BELUM TUNTAS'}</span></div>
+                            </div>
+                            
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <button onclick="downloadResult()" class="flex-1 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 font-bold py-3.5 rounded-xl transition-all flex justify-center items-center gap-2 shadow-sm">
+                                    <i class="fa-solid fa-file-arrow-down"></i> Unduh Hasil
+                                </button>
+                                <button onclick="logout()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-slate-800/20">
+                                    Selesai & Keluar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Admin functionality
+        function startUjiCoba() {
+            state.currentUser = { role: 'student', name: 'Admin (Mode Uji Coba)', class: 'Guru', presensi: '000' };
+            navigateTo('studentIntro');
+        }
+
+        function saveAdminSettings(e) {
+            e.preventDefault();
+            const newLogo = getEl('editLogo').value;
+            const newPass = getEl('editPass').value;
+            
+            if(newLogo) state.settings.logoText = newLogo;
+            if(newPass) state.settings.adminPassword = newPass;
+            
+            alert('Pengaturan berhasil disimpan!');
+            render();
+        }
+
+        function saveQuestionsConfig() {
+            try {
+                const rawJson = getEl('questionsJson').value;
+                const parsed = JSON.parse(rawJson);
+                
+                if(!parsed.mcq || !parsed.tf || !parsed.matching) throw new Error("Format JSON tidak lengkap (membutuhkan objek mcq, tf, matching)");
+                
+                state.questions = parsed;
+                alert('Bank soal dan kunci jawaban berhasil diperbarui!');
+            } catch (err) {
+                alert('Gagal menyimpan soal. Pastikan format JSON valid (perhatikan tanda kutip dan koma).\nError detail: ' + err.message);
+            }
+        }
+
+        function renderAdminDashboard() {
+            return `
+                ${renderHeader(true)}
+                <div class="flex-grow bg-slate-100 p-4 md:p-8 fade-in h-full">
+                    <div class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Control Panel -->
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
+                                <h3 class="font-bold text-lg mb-4 text-slate-800 flex items-center gap-2"><i class="fa-solid fa-flask text-teal-600"></i> Mode Simulasi</h3>
+                                <button onclick="startUjiCoba()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl mb-3 transition shadow-md shadow-blue-500/30 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-play"></i> Uji Coba Soal (Siswa)
+                                </button>
+                                <p class="text-sm text-slate-500 text-center leading-relaxed">Gunakan mode ini untuk menguji timer dan tampilan soal seolah-olah Anda adalah siswa. (Abaikan batas 2x percobaan).</p>
+                            </div>
+
+                            <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-200">
+                                <h3 class="font-bold text-lg mb-4 text-slate-800 flex items-center gap-2"><i class="fa-solid fa-sliders text-slate-600"></i> Pengaturan Aplikasi</h3>
+                                <form onsubmit="saveAdminSettings(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Aplikasi / Sekolah (Logo)</label>
+                                        <input type="text" id="editLogo" value="${state.settings.logoText}" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Password Admin Baru</label>
+                                        <input type="text" id="editPass" placeholder="Isi untuk mengganti sandi..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none">
+                                    </div>
+                                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-lg transition shadow-md">Simpan Pengaturan</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Question Editor -->
+                        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm flex flex-col h-auto lg:h-[calc(100vh-140px)] border border-slate-200 overflow-hidden">
+                            <div class="p-4 md:p-5 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50">
+                                <div>
+                                    <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><i class="fa-solid fa-database text-teal-600"></i> Editor Bank Soal (JSON)</h3>
+                                    <p class="text-xs text-slate-500 mt-1">Edit redaksi soal, opsi, dan kunci jawaban (a) secara langsung.</p>
+                                </div>
+                                <button onclick="saveQuestionsConfig()" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md hover:shadow-teal-500/30 transition flex items-center gap-2 w-full md:w-auto justify-center">
+                                    <i class="fa-solid fa-floppy-disk"></i> Simpan JSON
+                                </button>
+                            </div>
+                            <div class="p-5 flex-grow flex flex-col">
+                                <div class="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm mb-4 border border-amber-200 shadow-sm flex gap-3 items-start">
+                                    <i class="fa-solid fa-triangle-exclamation mt-0.5 text-amber-600"></i> 
+                                    <div>
+                                        <strong>Peringatan Format:</strong> Editor ini menuntut struktur JSON yang valid. 
+                                        Kunci jawaban MCQ (a) berupa index array (0 untuk A, 1 untuk B, dll). Kunci jawaban TF berupa boolean (true/false).
+                                    </div>
+                                </div>
+                                <textarea id="questionsJson" class="w-full flex-grow p-4 font-mono text-sm border border-slate-300 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none whitespace-pre custom-scrollbar min-h-[400px]" spellcheck="false">${JSON.stringify(state.questions, null, 4)}</textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+        }
+
+        function render() {
+            const app = getEl('app');
+            const v = state.currentView;
+            
+            // Route Guard
+            if (v !== 'login' && !state.currentUser) {
+                navigateTo('login');
+                return;
+            }
+
+            if (v === 'login') app.innerHTML = renderLogin();
+            else if (v === 'studentIntro') app.innerHTML = renderStudentIntro();
+            else if (v === 'quiz') {
+                app.innerHTML = renderQuiz();
+                renderQuizContent();
+                updateTimerUI(); 
+            }
+            else if (v === 'result') app.innerHTML = renderResult();
+            else if (v === 'adminDashboard') app.innerHTML = renderAdminDashboard();
+        }
+
+        function init() {
+            render();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
